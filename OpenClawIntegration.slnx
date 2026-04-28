@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OpenClawIntegration/OpenClawIntegration.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OpenClawIntegration.Tests/OpenClawIntegration.Tests.csproj" />
+  </Folder>
+</Solution>

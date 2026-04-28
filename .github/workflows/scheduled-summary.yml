@@ -1,0 +1,58 @@
+name: Daily Summary
+
+on:
+  schedule:
+    # Runs every day at 08:00 UTC. Adjust the cron expression as needed.
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      run_immediately:
+        description: "Run the summary cycle immediately (one-shot mode)"
+        required: false
+        default: "true"
+
+jobs:
+  run-summary:
+    name: Run OpenClaw Summary
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run summary (one-shot)
+        # The app reads config from environment variables using the standard
+        # .NET environment-variable configuration provider.
+        # Each secret maps to the corresponding appsettings key.
+        env:
+          OpenClawIntegration__Copilot__Token: ${{ secrets.COPILOT_TOKEN }}
+          OpenClawIntegration__OpenClaw__ApiKey: ${{ secrets.OPENCLAW_API_KEY }}
+          OpenClawIntegration__OpenClaw__UseDirectCopilot: ${{ vars.OPENCLAW_USE_DIRECT_COPILOT || 'false' }}
+          OpenClawIntegration__WhatsApp__AccountSid: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          OpenClawIntegration__WhatsApp__AuthToken: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          OpenClawIntegration__WhatsApp__FromNumber: ${{ secrets.WHATSAPP_FROM_NUMBER }}
+          OpenClawIntegration__WhatsApp__ToNumber: ${{ secrets.WHATSAPP_TO_NUMBER }}
+          OpenClawIntegration__Scheduler__CronExpression: ${{ vars.SCHEDULER_CRON || '0 8 * * *' }}
+          OpenClawIntegration__Topics__0__Name: ${{ vars.TOPIC_0_NAME || 'AI Industry News' }}
+          OpenClawIntegration__Topics__0__Description: ${{ vars.TOPIC_0_DESCRIPTION || 'Latest developments in artificial intelligence and large language models.' }}
+          OpenClawIntegration__Topics__1__Name: ${{ vars.TOPIC_1_NAME || '' }}
+          OpenClawIntegration__Topics__1__Description: ${{ vars.TOPIC_1_DESCRIPTION || '' }}
+        run: |
+          dotnet run \
+            --project src/OpenClawIntegration/OpenClawIntegration.csproj \
+            --configuration Release \
+            --no-build \
+            -- --run-once
