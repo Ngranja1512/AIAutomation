@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
 using OpenClawIntegration.Models;
 using OpenClawIntegration.Services;
@@ -8,22 +7,6 @@ namespace OpenClawIntegration.Tests.Services;
 
 public class OpenClawServiceTests
 {
-    private static AppSettings BuildSettings(bool useDirectCopilot = true) =>
-        new()
-        {
-            Copilot = new CopilotSettings
-            {
-                Token = "test-copilot-token",
-                ApiUrl = "https://api.githubcopilot.com",
-                Model = "gpt-4o",
-            },
-            OpenClaw = new OpenClawSettings
-            {
-                ApiUrl = "https://api.openclaw.ai",
-                UseDirectCopilot = useDirectCopilot,
-            },
-        };
-
     [Fact]
     public async Task ResearchTopicAsync_ReturnsSuccess_WhenCopilotSucceeds()
     {
@@ -33,10 +16,7 @@ public class OpenClawServiceTests
             .Setup(s => s.SummariseTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("Latest AI news summary.");
 
-        var http = new System.Net.Http.HttpClient();
-        var options = Options.Create(BuildSettings(useDirectCopilot: true));
-        var sut = new OpenClawService(
-            http, options, copilotMock.Object, NullLogger<OpenClawService>.Instance);
+        var sut = new OpenClawService(copilotMock.Object, NullLogger<OpenClawService>.Instance);
 
         var topic = new Topic { Name = "AI News", Description = "Artificial intelligence." };
 
@@ -59,10 +39,7 @@ public class OpenClawServiceTests
             .Setup(s => s.SummariseTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Unauthorized"));
 
-        var http = new System.Net.Http.HttpClient();
-        var options = Options.Create(BuildSettings(useDirectCopilot: true));
-        var sut = new OpenClawService(
-            http, options, copilotMock.Object, NullLogger<OpenClawService>.Instance);
+        var sut = new OpenClawService(copilotMock.Object, NullLogger<OpenClawService>.Instance);
 
         var topic = new Topic { Name = "Failing Topic" };
 
@@ -77,7 +54,7 @@ public class OpenClawServiceTests
     }
 
     [Fact]
-    public async Task ResearchTopicAsync_UsesCopilotDirectly_WhenUseDirectCopilotIsTrue()
+    public async Task ResearchTopicAsync_DelegatesToCopilotService()
     {
         // Arrange
         var copilotMock = new Mock<ICopilotService>();
@@ -85,10 +62,7 @@ public class OpenClawServiceTests
             .Setup(s => s.SummariseTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("Summary via Copilot.");
 
-        var http = new System.Net.Http.HttpClient();
-        var options = Options.Create(BuildSettings(useDirectCopilot: true));
-        var sut = new OpenClawService(
-            http, options, copilotMock.Object, NullLogger<OpenClawService>.Instance);
+        var sut = new OpenClawService(copilotMock.Object, NullLogger<OpenClawService>.Instance);
 
         var topic = new Topic { Name = "Test" };
 
@@ -113,10 +87,7 @@ public class OpenClawServiceTests
 
         var before = DateTime.UtcNow;
 
-        var http = new System.Net.Http.HttpClient();
-        var options = Options.Create(BuildSettings(useDirectCopilot: true));
-        var sut = new OpenClawService(
-            http, options, copilotMock.Object, NullLogger<OpenClawService>.Instance);
+        var sut = new OpenClawService(copilotMock.Object, NullLogger<OpenClawService>.Instance);
 
         var topic = new Topic { Name = "Time Test" };
 
