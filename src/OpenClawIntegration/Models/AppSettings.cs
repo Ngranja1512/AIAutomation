@@ -10,10 +10,10 @@ public class AppSettings
 
 public class CopilotSettings
 {
-    /// <summary>GitHub personal access token with Copilot access.</summary>
+    /// <summary>GitHub personal access token with <c>models: read</c> permission.</summary>
     public string Token { get; set; } = string.Empty;
 
-    public string ApiUrl { get; set; } = "https://api.githubcopilot.com";
+    public string ApiUrl { get; set; } = "https://models.inference.ai.azure.com";
 
     /// <summary>Copilot model to use for summarisation.</summary>
     public string Model { get; set; } = "gpt-4o";
