@@ -36,16 +36,24 @@ jobs:
       - name: Run summary (one-shot)
         # The app reads config from environment variables using the standard
         # .NET environment-variable configuration provider.
-        # Each secret maps to the corresponding appsettings key.
+        # Each secret/variable maps to the corresponding appsettings key under
+        # the "OpenClawIntegration" section (see AppSettings).
         env:
+          # GitHub Copilot token
           OpenClawIntegration__Copilot__Token: ${{ secrets.COPILOT_TOKEN }}
-          OpenClawIntegration__OpenClaw__ApiKey: ${{ secrets.OPENCLAW_API_KEY }}
-          OpenClawIntegration__OpenClaw__UseDirectCopilot: ${{ vars.OPENCLAW_USE_DIRECT_COPILOT || 'false' }}
-          OpenClawIntegration__WhatsApp__AccountSid: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          OpenClawIntegration__WhatsApp__AuthToken: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          OpenClawIntegration__WhatsApp__FromNumber: ${{ secrets.WHATSAPP_FROM_NUMBER }}
-          OpenClawIntegration__WhatsApp__ToNumber: ${{ secrets.WHATSAPP_TO_NUMBER }}
+          # Optional overrides for Copilot API settings
+          OpenClawIntegration__Copilot__Model: ${{ vars.COPILOT_MODEL || 'gpt-4o' }}
+          OpenClawIntegration__Copilot__MaxTokens: ${{ vars.COPILOT_MAX_TOKENS || '1000' }}
+          # Email / SMTP notification settings
+          OpenClawIntegration__Email__SmtpHost: ${{ secrets.SMTP_HOST }}
+          OpenClawIntegration__Email__SmtpPort: ${{ vars.SMTP_PORT || '587' }}
+          OpenClawIntegration__Email__Username: ${{ secrets.SMTP_USERNAME }}
+          OpenClawIntegration__Email__Password: ${{ secrets.SMTP_PASSWORD }}
+          OpenClawIntegration__Email__FromAddress: ${{ secrets.EMAIL_FROM_ADDRESS }}
+          OpenClawIntegration__Email__ToAddress: ${{ secrets.EMAIL_TO_ADDRESS }}
+          # Scheduler cron expression (UTC, 5-part)
           OpenClawIntegration__Scheduler__CronExpression: ${{ vars.SCHEDULER_CRON || '0 8 * * *' }}
+          # Topics to summarise (add more pairs as needed)
           OpenClawIntegration__Topics__0__Name: ${{ vars.TOPIC_0_NAME || 'AI Industry News' }}
           OpenClawIntegration__Topics__0__Description: ${{ vars.TOPIC_0_DESCRIPTION || 'Latest developments in artificial intelligence and large language models.' }}
           OpenClawIntegration__Topics__1__Name: ${{ vars.TOPIC_1_NAME || '' }}
