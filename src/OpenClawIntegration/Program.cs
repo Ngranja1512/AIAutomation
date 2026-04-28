@@ -12,9 +12,9 @@ builder.Services.Configure<AppSettings>(
 
 // Register HTTP clients
 builder.Services.AddHttpClient<ICopilotService, CopilotService>();
-builder.Services.AddHttpClient<IOpenClawService, OpenClawService>();
 
 // Register other services
+builder.Services.AddSingleton<IOpenClawService, OpenClawService>();
 builder.Services.AddSingleton<IEmailService, EmailService>();
 
 if (runOnce)
