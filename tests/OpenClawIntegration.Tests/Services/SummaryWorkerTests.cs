@@ -36,15 +36,15 @@ public class SummaryWorkerTests
             .ReturnsAsync<Topic, CancellationToken, IOpenClawService, SummaryResult>(
                 (topic, _) => results.First(r => r.TopicName == topic.Name));
 
-        var whatsAppMock = new Mock<IWhatsAppService>();
-        whatsAppMock
+        var emailMock = new Mock<IEmailService>();
+        emailMock
             .Setup(s => s.SendSummariesAsync(It.IsAny<IReadOnlyList<SummaryResult>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var options = Options.Create(BuildSettings(topics));
         var worker = new SummaryWorker(
             openClawMock.Object,
-            whatsAppMock.Object,
+            emailMock.Object,
             options,
             NullLogger<SummaryWorker>.Instance);
 
@@ -57,7 +57,7 @@ public class SummaryWorkerTests
             Times.Exactly(topics.Length));
 
         // Assert – summaries were sent exactly once
-        whatsAppMock.Verify(
+        emailMock.Verify(
             s => s.SendSummariesAsync(It.IsAny<IReadOnlyList<SummaryResult>>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -67,12 +67,12 @@ public class SummaryWorkerTests
     {
         // Arrange
         var openClawMock = new Mock<IOpenClawService>();
-        var whatsAppMock = new Mock<IWhatsAppService>();
+        var emailMock = new Mock<IEmailService>();
 
         var options = Options.Create(BuildSettings(topics: []));
         var worker = new SummaryWorker(
             openClawMock.Object,
-            whatsAppMock.Object,
+            emailMock.Object,
             options,
             NullLogger<SummaryWorker>.Instance);
 
@@ -83,7 +83,7 @@ public class SummaryWorkerTests
         openClawMock.Verify(
             s => s.ResearchTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        whatsAppMock.Verify(
+        emailMock.Verify(
             s => s.SendSummariesAsync(It.IsAny<IReadOnlyList<SummaryResult>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -109,15 +109,15 @@ public class SummaryWorkerTests
                 It.Is<Topic>(t => t.Name == "Topic B"), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SummaryResult { TopicName = "Topic B", IsSuccess = true, Summary = "Summary B" });
 
-        var whatsAppMock = new Mock<IWhatsAppService>();
-        whatsAppMock
+        var emailMock = new Mock<IEmailService>();
+        emailMock
             .Setup(s => s.SendSummariesAsync(It.IsAny<IReadOnlyList<SummaryResult>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var options = Options.Create(BuildSettings(topics));
         var worker = new SummaryWorker(
             openClawMock.Object,
-            whatsAppMock.Object,
+            emailMock.Object,
             options,
             NullLogger<SummaryWorker>.Instance);
 
@@ -128,7 +128,7 @@ public class SummaryWorkerTests
         openClawMock.Verify(
             s => s.ResearchTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
-        whatsAppMock.Verify(
+        emailMock.Verify(
             s => s.SendSummariesAsync(
                 It.Is<IReadOnlyList<SummaryResult>>(r => r.Count == 2),
                 It.IsAny<CancellationToken>()),

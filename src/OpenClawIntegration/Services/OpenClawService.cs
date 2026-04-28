@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -8,9 +7,9 @@ namespace OpenClawIntegration.Services;
 
 /// <summary>
 /// Integrates with the OpenClaw AI agent platform (https://openclaw.ai/).
-/// OpenClaw is configured to use the caller's GitHub Copilot account as its
-/// underlying LLM.  When <see cref="OpenClawSettings.UseDirectCopilot"/> is
-/// <c>true</c>, the Copilot API is called directly, bypassing OpenClaw.
+/// OpenClaw uses the caller's GitHub Copilot account as its underlying LLM.
+/// When <see cref="OpenClawSettings.UseDirectCopilot"/> is <c>true</c>,
+/// the Copilot API is called directly, bypassing OpenClaw.
 /// </summary>
 public class OpenClawService : IOpenClawService
 {
@@ -38,8 +37,6 @@ public class OpenClawService : IOpenClawService
         _logger = logger;
 
         _http.BaseAddress = new Uri(_openClawSettings.ApiUrl.TrimEnd('/') + "/");
-        _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", _openClawSettings.ApiKey);
     }
 
     public async Task<SummaryResult> ResearchTopicAsync(Topic topic, CancellationToken cancellationToken = default)
@@ -48,7 +45,7 @@ public class OpenClawService : IOpenClawService
         {
             string summary;
 
-            if (_openClawSettings.UseDirectCopilot || string.IsNullOrWhiteSpace(_openClawSettings.ApiKey))
+            if (_openClawSettings.UseDirectCopilot)
             {
                 _logger.LogInformation(
                     "Using GitHub Copilot directly for topic: {Topic}", topic.Name);
