@@ -14,13 +14,13 @@ public class OneShotWorker : BackgroundService
 
     public OneShotWorker(
         IOpenClawService openClawService,
-        IWhatsAppService whatsAppService,
+        IEmailService emailService,
         Microsoft.Extensions.Options.IOptions<Models.AppSettings> options,
         IHostApplicationLifetime lifetime,
         ILogger<OneShotWorker> logger,
         ILogger<SummaryWorker> summaryWorkerLogger)
     {
-        _summaryWorker = new SummaryWorker(openClawService, whatsAppService, options, summaryWorkerLogger);
+        _summaryWorker = new SummaryWorker(openClawService, emailService, options, summaryWorkerLogger);
         _lifetime = lifetime;
         _logger = logger;
     }

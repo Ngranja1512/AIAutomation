@@ -8,7 +8,7 @@ namespace OpenClawIntegration.Tests.Services;
 
 public class OpenClawServiceTests
 {
-    private static AppSettings BuildSettings(bool useDirectCopilot = true, string openClawKey = "") =>
+    private static AppSettings BuildSettings(bool useDirectCopilot = true) =>
         new()
         {
             Copilot = new CopilotSettings
@@ -19,7 +19,6 @@ public class OpenClawServiceTests
             },
             OpenClaw = new OpenClawSettings
             {
-                ApiKey = openClawKey,
                 ApiUrl = "https://api.openclaw.ai",
                 UseDirectCopilot = useDirectCopilot,
             },
@@ -78,7 +77,7 @@ public class OpenClawServiceTests
     }
 
     [Fact]
-    public async Task ResearchTopicAsync_UsesCopilotDirectly_WhenApiKeyIsEmpty()
+    public async Task ResearchTopicAsync_UsesCopilotDirectly_WhenUseDirectCopilotIsTrue()
     {
         // Arrange
         var copilotMock = new Mock<ICopilotService>();
@@ -87,8 +86,7 @@ public class OpenClawServiceTests
             .ReturnsAsync("Summary via Copilot.");
 
         var http = new System.Net.Http.HttpClient();
-        // ApiKey is empty → should fall back to direct Copilot even if UseDirectCopilot is false
-        var options = Options.Create(BuildSettings(useDirectCopilot: false, openClawKey: ""));
+        var options = Options.Create(BuildSettings(useDirectCopilot: true));
         var sut = new OpenClawService(
             http, options, copilotMock.Object, NullLogger<OpenClawService>.Instance);
 

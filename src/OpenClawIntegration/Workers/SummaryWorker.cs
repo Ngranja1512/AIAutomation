@@ -13,18 +13,18 @@ namespace OpenClawIntegration.Workers;
 public class SummaryWorker : BackgroundService
 {
     private readonly IOpenClawService _openClawService;
-    private readonly IWhatsAppService _whatsAppService;
+    private readonly IEmailService _emailService;
     private readonly AppSettings _settings;
     private readonly ILogger<SummaryWorker> _logger;
 
     public SummaryWorker(
         IOpenClawService openClawService,
-        IWhatsAppService whatsAppService,
+        IEmailService emailService,
         IOptions<AppSettings> options,
         ILogger<SummaryWorker> logger)
     {
         _openClawService = openClawService;
-        _whatsAppService = whatsAppService;
+        _emailService = emailService;
         _settings = options.Value;
         _logger = logger;
     }
@@ -96,6 +96,6 @@ public class SummaryWorker : BackgroundService
             "Summary cycle complete. Successful: {Success}, Failed: {Failed}",
             successful, failed);
 
-        await _whatsAppService.SendSummariesAsync(results, cancellationToken);
+        await _emailService.SendSummariesAsync(results, cancellationToken);
     }
 }
