@@ -63,6 +63,14 @@ public class CopilotService : ICopilotService
         _logger.LogInformation("Requesting Copilot summary for topic: {Topic}", topic.Name);
 
         using var response = await _http.PostAsync("chat/completions", content, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError(
+                "Copilot API returned {StatusCode} for topic {Topic}. Response: {Body}",
+                (int)response.StatusCode, topic.Name, errorBody);
+        }
+
         response.EnsureSuccessStatusCode();
 
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);

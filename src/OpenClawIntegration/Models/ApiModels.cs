@@ -12,7 +12,7 @@ public class CopilotChatRequest
     [JsonPropertyName("messages")]
     public List<CopilotMessage> Messages { get; set; } = [];
 
-    [JsonPropertyName("max_tokens")]
+    [JsonPropertyName("max_completion_tokens")]
     public int MaxTokens { get; set; } = 1000;
 }
 

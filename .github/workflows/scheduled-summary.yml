@@ -42,7 +42,7 @@ jobs:
           # GitHub Copilot token
           OpenClawIntegration__Copilot__Token: ${{ secrets.COPILOT_TOKEN }}
           # Optional overrides for Copilot API settings
-          OpenClawIntegration__Copilot__Model: ${{ vars.COPILOT_MODEL || 'gpt-5.4' }}
+          OpenClawIntegration__Copilot__Model: ${{ vars.COPILOT_MODEL || 'gpt-4o' }}
           OpenClawIntegration__Copilot__MaxTokens: ${{ vars.COPILOT_MAX_TOKENS || '2000' }}
           # Email / SMTP notification settings
           OpenClawIntegration__Email__SmtpHost: ${{ secrets.SMTP_HOST }}
