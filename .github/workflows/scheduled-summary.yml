@@ -56,8 +56,8 @@ jobs:
           # Topics to summarise (add more pairs as needed)
           OpenClawIntegration__Topics__0__Name: ${{ vars.TOPIC_0_NAME || 'AI Industry News' }}
           OpenClawIntegration__Topics__0__Description: ${{ vars.TOPIC_0_DESCRIPTION || 'Latest developments in artificial intelligence and large language models.' }}
-          OpenClawIntegration__Topics__1__Name: ${{ vars.TOPIC_1_NAME || '' }}
-          OpenClawIntegration__Topics__1__Description: ${{ vars.TOPIC_1_DESCRIPTION || '' }}
+          OpenClawIntegration__Topics__1__Name: ${{ vars.TOPIC_1_NAME }}
+          OpenClawIntegration__Topics__1__Description: ${{ vars.TOPIC_1_DESCRIPTION }}
         run: |
           dotnet run \
             --project src/OpenClawIntegration/OpenClawIntegration.csproj \

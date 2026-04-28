@@ -25,6 +25,18 @@ public class EmailService : IEmailService
         IReadOnlyList<SummaryResult> summaries,
         CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(_settings.FromAddress))
+        {
+            _logger.LogError("Email FromAddress is not configured. Set the EMAIL_FROM_ADDRESS secret/environment variable.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_settings.ToAddress))
+        {
+            _logger.LogError("Email ToAddress is not configured. Set the EMAIL_TO_ADDRESS secret/environment variable.");
+            return;
+        }
+
         if (summaries.Count == 0)
         {
             _logger.LogInformation("No summaries to send.");

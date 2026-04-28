@@ -83,7 +83,17 @@ public class SummaryWorker : BackgroundService
             return;
         }
 
-        var tasks = _settings.Topics
+        var topics = _settings.Topics
+            .Where(t => !string.IsNullOrWhiteSpace(t.Name))
+            .ToList();
+
+        if (topics.Count == 0)
+        {
+            _logger.LogWarning("No valid topics configured. Add topics with non-empty names to appsettings.json.");
+            return;
+        }
+
+        var tasks = topics
             .Select(topic => _openClawService.ResearchTopicAsync(topic, cancellationToken))
             .ToArray();
 
