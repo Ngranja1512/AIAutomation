@@ -13,7 +13,7 @@ on:
 
 jobs:
   run-summary:
-    name: Run OpenClaw Summary
+    name: Run CopilotDigest Summary
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -37,30 +37,30 @@ jobs:
         # The app reads config from environment variables using the standard
         # .NET environment-variable configuration provider.
         # Each secret/variable maps to the corresponding appsettings key under
-        # the "OpenClawIntegration" section (see AppSettings).
+        # the "CopilotDigest" section (see AppSettings).
         env:
           # GitHub Copilot token
-          OpenClawIntegration__Copilot__Token: ${{ secrets.COPILOT_TOKEN }}
+          CopilotDigest__Copilot__Token: ${{ secrets.COPILOT_TOKEN }}
           # Optional overrides for Copilot API settings
-          OpenClawIntegration__Copilot__Model: ${{ vars.COPILOT_MODEL || 'gpt-4o' }}
-          OpenClawIntegration__Copilot__MaxTokens: ${{ vars.COPILOT_MAX_TOKENS || '2000' }}
+          CopilotDigest__Copilot__Model: ${{ vars.COPILOT_MODEL || 'gpt-4o' }}
+          CopilotDigest__Copilot__MaxTokens: ${{ vars.COPILOT_MAX_TOKENS || '2000' }}
           # Email / SMTP notification settings
-          OpenClawIntegration__Email__SmtpHost: ${{ secrets.SMTP_HOST }}
-          OpenClawIntegration__Email__SmtpPort: ${{ vars.SMTP_PORT || '587' }}
-          OpenClawIntegration__Email__Username: ${{ secrets.SMTP_USERNAME }}
-          OpenClawIntegration__Email__Password: ${{ secrets.SMTP_PASSWORD }}
-          OpenClawIntegration__Email__FromAddress: ${{ secrets.EMAIL_FROM_ADDRESS }}
-          OpenClawIntegration__Email__ToAddress: ${{ secrets.EMAIL_TO_ADDRESS }}
+          CopilotDigest__Email__SmtpHost: ${{ secrets.SMTP_HOST }}
+          CopilotDigest__Email__SmtpPort: ${{ vars.SMTP_PORT || '587' }}
+          CopilotDigest__Email__Username: ${{ secrets.SMTP_USERNAME }}
+          CopilotDigest__Email__Password: ${{ secrets.SMTP_PASSWORD }}
+          CopilotDigest__Email__FromAddress: ${{ secrets.EMAIL_FROM_ADDRESS }}
+          CopilotDigest__Email__ToAddress: ${{ secrets.EMAIL_TO_ADDRESS }}
           # Scheduler cron expression (UTC, 5-part)
-          OpenClawIntegration__Scheduler__CronExpression: ${{ vars.SCHEDULER_CRON || '0 8 * * *' }}
+          CopilotDigest__Scheduler__CronExpression: ${{ vars.SCHEDULER_CRON || '0 8 * * *' }}
           # Topics to summarise (add more pairs as needed)
-          OpenClawIntegration__Topics__0__Name: ${{ vars.TOPIC_0_NAME || 'AI Industry News' }}
-          OpenClawIntegration__Topics__0__Description: ${{ vars.TOPIC_0_DESCRIPTION || 'Latest developments in artificial intelligence and large language models.' }}
-          OpenClawIntegration__Topics__1__Name: ${{ vars.TOPIC_1_NAME }}
-          OpenClawIntegration__Topics__1__Description: ${{ vars.TOPIC_1_DESCRIPTION }}
+          CopilotDigest__Topics__0__Name: ${{ vars.TOPIC_0_NAME || 'AI Industry News' }}
+          CopilotDigest__Topics__0__Description: ${{ vars.TOPIC_0_DESCRIPTION || 'Latest developments in artificial intelligence and large language models.' }}
+          CopilotDigest__Topics__1__Name: ${{ vars.TOPIC_1_NAME }}
+          CopilotDigest__Topics__1__Description: ${{ vars.TOPIC_1_DESCRIPTION }}
         run: |
           dotnet run \
-            --project src/OpenClawIntegration/OpenClawIntegration.csproj \
+            --project src/CopilotDigest/CopilotDigest.csproj \
             --configuration Release \
             --no-build \
             -- --run-once
