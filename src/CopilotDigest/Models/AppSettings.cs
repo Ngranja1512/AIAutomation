@@ -10,9 +10,22 @@ public class AppSettings
 
 public class CopilotSettings
 {
-    /// <summary>GitHub personal access token with <c>models: read</c> permission.</summary>
+    /// <summary>
+    /// GitHub token used to authenticate with the AI API.
+    /// <list type="bullet">
+    ///   <item>GitHub Models (free): a PAT with <c>models: read</c> permission.</item>
+    ///   <item>GitHub Copilot Pro: a PAT or OAuth token with Copilot access (requires an active Copilot Pro subscription).</item>
+    /// </list>
+    /// </summary>
     public string Token { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Base URL of the chat-completions API.
+    /// <list type="bullet">
+    ///   <item>GitHub Models (free tier): <c>https://models.inference.ai.azure.com</c></item>
+    ///   <item>GitHub Copilot Pro: <c>https://api.githubcopilot.com</c></item>
+    /// </list>
+    /// </summary>
     public string ApiUrl { get; set; } = "https://models.inference.ai.azure.com";
 
     /// <summary>Copilot model to use for summarisation.</summary>
