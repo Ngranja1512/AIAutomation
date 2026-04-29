@@ -34,7 +34,7 @@ public class CopilotService : ICopilotService
         _http.BaseAddress = new Uri(_settings.ApiUrl.TrimEnd('/') + "/");
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", _settings.Token);
-        _http.DefaultRequestHeaders.Add("Copilot-Integration-Id", "openclaw-integration");
+        _http.DefaultRequestHeaders.Add("Copilot-Integration-Id", "copilot-daily-digest");
     }
 
     public async Task<string> SummariseTopicAsync(Topic topic, CancellationToken cancellationToken = default)

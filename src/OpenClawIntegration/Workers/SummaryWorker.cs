@@ -7,23 +7,23 @@ namespace OpenClawIntegration.Workers;
 
 /// <summary>
 /// Background worker that runs on a configurable cron schedule.
-/// On each tick it calls the OpenClaw/Copilot service for every configured
-/// topic and dispatches the summaries to WhatsApp.
+/// On each tick it calls the research service for every configured
+/// topic and dispatches the summaries via email.
 /// </summary>
 public class SummaryWorker : BackgroundService
 {
-    private readonly IOpenClawService _openClawService;
+    private readonly IResearchService _researchService;
     private readonly IEmailService _emailService;
     private readonly AppSettings _settings;
     private readonly ILogger<SummaryWorker> _logger;
 
     public SummaryWorker(
-        IOpenClawService openClawService,
+        IResearchService researchService,
         IEmailService emailService,
         IOptions<AppSettings> options,
         ILogger<SummaryWorker> logger)
     {
-        _openClawService = openClawService;
+        _researchService = researchService;
         _emailService = emailService;
         _settings = options.Value;
         _logger = logger;
@@ -94,7 +94,7 @@ public class SummaryWorker : BackgroundService
         }
 
         var tasks = topics
-            .Select(topic => _openClawService.ResearchTopicAsync(topic, cancellationToken))
+            .Select(topic => _researchService.ResearchTopicAsync(topic, cancellationToken))
             .ToArray();
 
         var results = await Task.WhenAll(tasks);

@@ -6,14 +6,14 @@ namespace OpenClawIntegration.Services;
 /// Orchestrates topic research by calling the GitHub Copilot API
 /// and wrapping the result in a <see cref="SummaryResult"/>.
 /// </summary>
-public class OpenClawService : IOpenClawService
+public class ResearchService : IResearchService
 {
     private readonly ICopilotService _copilotService;
-    private readonly ILogger<OpenClawService> _logger;
+    private readonly ILogger<ResearchService> _logger;
 
-    public OpenClawService(
+    public ResearchService(
         ICopilotService copilotService,
-        ILogger<OpenClawService> logger)
+        ILogger<ResearchService> logger)
     {
         _copilotService = copilotService;
         _logger = logger;

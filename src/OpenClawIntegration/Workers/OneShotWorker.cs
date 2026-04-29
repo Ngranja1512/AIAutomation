@@ -13,14 +13,14 @@ public class OneShotWorker : BackgroundService
     private readonly ILogger<OneShotWorker> _logger;
 
     public OneShotWorker(
-        IOpenClawService openClawService,
+        IResearchService researchService,
         IEmailService emailService,
         Microsoft.Extensions.Options.IOptions<Models.AppSettings> options,
         IHostApplicationLifetime lifetime,
         ILogger<OneShotWorker> logger,
         ILogger<SummaryWorker> summaryWorkerLogger)
     {
-        _summaryWorker = new SummaryWorker(openClawService, emailService, options, summaryWorkerLogger);
+        _summaryWorker = new SummaryWorker(researchService, emailService, options, summaryWorkerLogger);
         _lifetime = lifetime;
         _logger = logger;
     }

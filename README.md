@@ -1,6 +1,6 @@
 # OpenClawIntegration
 
-A .NET 10 Worker Service that integrates [OpenClaw AI](https://openclaw.ai/) with your **GitHub Copilot** account to research and summarise topics on a daily schedule, then deliver the results straight to your **WhatsApp**.
+A .NET 10 Worker Service that uses **GitHub Copilot** to research and summarise topics on a daily schedule, then delivers the results to your **email inbox**.
 
 ## How it works
 
@@ -18,10 +18,10 @@ A .NET 10 Worker Service that integrates [OpenClaw AI](https://openclaw.ai/) wit
                   │ for each topic
                   ▼
        ┌───────────────────────┐
-       │   OpenClawService     │◄── OpenClaw API key
-       │  (AI agent layer)     │    + GitHub Copilot token
+       │   ResearchService     │
+       │  (orchestration)      │
        └──────────┬────────────┘
-                  │ on UseDirectCopilot=true or empty ApiKey
+                  │
                   ▼
        ┌───────────────────────┐
        │   CopilotService      │◄── GitHub Copilot token
@@ -30,8 +30,8 @@ A .NET 10 Worker Service that integrates [OpenClaw AI](https://openclaw.ai/) wit
                   │ summaries
                   ▼
        ┌───────────────────────┐
-       │   WhatsAppService     │◄── Twilio credentials
-       │  (Twilio API)         │
+       │   EmailService        │◄── SMTP credentials
+       │  (SMTP delivery)      │
        └───────────────────────┘
 ```
 
@@ -43,8 +43,7 @@ A .NET 10 Worker Service that integrates [OpenClaw AI](https://openclaw.ai/) wit
 |---|---|
 | .NET 10 SDK | https://dotnet.microsoft.com/download |
 | GitHub personal access token (with Copilot access) | GitHub → Settings → Developer settings → Personal access tokens |
-| OpenClaw API key | https://openclaw.ai/ (optional – set `UseDirectCopilot: true` to skip) |
-| Twilio account + WhatsApp sender | https://www.twilio.com/whatsapp |
+| SMTP email account | Any provider (e.g. Gmail with an app password) |
 
 ### 2. Configure secrets
 
@@ -63,15 +62,13 @@ Edit `appsettings.json`:
       "Token": "ghp_YOUR_GITHUB_TOKEN",
       "Model": "gpt-4o"
     },
-    "OpenClaw": {
-      "ApiKey": "YOUR_OPENCLAW_KEY",
-      "UseDirectCopilot": false
-    },
-    "WhatsApp": {
-      "AccountSid": "AC...",
-      "AuthToken": "your_twilio_auth_token",
-      "FromNumber": "+14155238886",
-      "ToNumber": "+YOUR_NUMBER"
+    "Email": {
+      "SmtpHost": "smtp.gmail.com",
+      "SmtpPort": 587,
+      "Username": "you@gmail.com",
+      "Password": "your_app_password",
+      "FromAddress": "you@gmail.com",
+      "ToAddress": "recipient@example.com"
     },
     "Scheduler": {
       "CronExpression": "0 8 * * *"
@@ -120,18 +117,18 @@ Add the following **Repository Secrets** (`Settings → Secrets and variables �
 | Secret | Value |
 |---|---|
 | `COPILOT_TOKEN` | Your GitHub personal access token |
-| `OPENCLAW_API_KEY` | Your OpenClaw API key |
-| `TWILIO_ACCOUNT_SID` | Twilio Account SID |
-| `TWILIO_AUTH_TOKEN` | Twilio Auth Token |
-| `WHATSAPP_FROM_NUMBER` | Twilio WhatsApp sender number (E.164) |
-| `WHATSAPP_TO_NUMBER` | Your WhatsApp number (E.164) |
+| `EMAIL_SMTP_HOST` | SMTP server hostname |
+| `EMAIL_SMTP_PORT` | SMTP port (e.g. `587`) |
+| `EMAIL_USERNAME` | SMTP login username |
+| `EMAIL_PASSWORD` | SMTP password or app password |
+| `EMAIL_FROM_ADDRESS` | Sender email address |
+| `EMAIL_TO_ADDRESS` | Recipient email address |
 
 Optionally, add these **Repository Variables** (`Settings → Secrets and variables → Actions → Variables`):
 
 | Variable | Default | Description |
 |---|---|---|
 | `SCHEDULER_CRON` | `0 8 * * *` | Cron expression (UTC) |
-| `OPENCLAW_USE_DIRECT_COPILOT` | `false` | Skip OpenClaw, use Copilot directly |
 | `TOPIC_0_NAME` | `AI Industry News` | First topic name |
 | `TOPIC_0_DESCRIPTION` | _(AI news)_ | First topic description |
 | `TOPIC_1_NAME` | _(empty)_ | Second topic name |
@@ -152,26 +149,20 @@ All settings live under the `OpenClawIntegration` key and can be overridden by e
 | Key | Default | Description |
 |---|---|---|
 | `Token` | _(required)_ | GitHub personal access token with Copilot scope |
-| `ApiUrl` | `https://api.githubcopilot.com` | Copilot API base URL |
+| `ApiUrl` | `https://models.inference.ai.azure.com` | Copilot API base URL |
 | `Model` | `gpt-4o` | Model used for summarisation |
 | `MaxTokens` | `1000` | Max tokens per summary response |
 
-### `OpenClaw`
-
-| Key | Default | Description |
-|---|---|---|
-| `ApiKey` | _(optional)_ | OpenClaw API key |
-| `ApiUrl` | `https://api.openclaw.ai` | OpenClaw API base URL |
-| `UseDirectCopilot` | `false` | When `true`, skip OpenClaw and call Copilot directly |
-
-### `WhatsApp`
+### `Email`
 
 | Key | Description |
 |---|---|
-| `AccountSid` | Twilio Account SID |
-| `AuthToken` | Twilio Auth Token |
-| `FromNumber` | WhatsApp-enabled sender number in E.164 format |
-| `ToNumber` | Recipient WhatsApp number in E.164 format |
+| `SmtpHost` | SMTP server hostname (e.g. `smtp.gmail.com`) |
+| `SmtpPort` | SMTP port (e.g. `587` for STARTTLS) |
+| `Username` | SMTP login username |
+| `Password` | SMTP password or app-specific password |
+| `FromAddress` | Sender email address |
+| `ToAddress` | Recipient email address |
 
 ### `Scheduler`
 
@@ -185,9 +176,8 @@ Array of topic objects:
 
 | Key | Description |
 |---|---|
-| `Name` | Short display name (used in the WhatsApp message header) |
-| `Description` | Context provided to the AI for richer summaries |
-| `Prompt` | _(optional)_ Full custom prompt that overrides the default |
+| `Name` | Short display name (used in the email subject/body) |
+| `Description` | Context provided to Copilot for richer summaries |
 
 ## Project structure
 
@@ -196,13 +186,13 @@ OpenClawIntegration/
 ├── src/OpenClawIntegration/
 │   ├── Models/
 │   │   ├── AppSettings.cs        # Configuration models
-│   │   ├── ApiModels.cs          # Copilot + OpenClaw API DTOs
+│   │   ├── ApiModels.cs          # Copilot API DTOs
 │   │   ├── Topic.cs              # Topic to research
 │   │   └── SummaryResult.cs      # Result of a summary run
 │   ├── Services/
 │   │   ├── CopilotService.cs     # GitHub Copilot chat-completions
-│   │   ├── OpenClawService.cs    # OpenClaw agent orchestration
-│   │   └── WhatsAppService.cs    # Twilio WhatsApp delivery
+│   │   ├── ResearchService.cs    # Orchestrates topic research via Copilot
+│   │   └── EmailService.cs       # SMTP email delivery
 │   ├── Workers/
 │   │   ├── SummaryWorker.cs      # Cron-scheduled background worker
 │   │   └── OneShotWorker.cs      # One-shot execution (--run-once)
@@ -212,12 +202,12 @@ OpenClawIntegration/
 ├── tests/OpenClawIntegration.Tests/
 │   └── Services/
 │       ├── CopilotServiceTests.cs
-│       ├── OpenClawServiceTests.cs
+│       ├── ResearchServiceTests.cs
 │       └── SummaryWorkerTests.cs
 ├── .github/workflows/
 │   ├── scheduled-summary.yml     # Daily cron + manual trigger
 │   └── ci.yml                    # Build & test on push/PR
-└── OpenClawIntegration.sln
+└── OpenClawIntegration.slnx
 ```
 
 ## Running tests

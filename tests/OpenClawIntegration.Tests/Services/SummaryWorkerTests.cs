@@ -30,10 +30,10 @@ public class SummaryWorkerTests
             .Select(t => new SummaryResult { TopicName = t.Name, IsSuccess = true, Summary = $"{t.Name} summary." })
             .ToList();
 
-        var openClawMock = new Mock<IOpenClawService>();
-        openClawMock
+        var researchMock = new Mock<IResearchService>();
+        researchMock
             .Setup(s => s.ResearchTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync<Topic, CancellationToken, IOpenClawService, SummaryResult>(
+            .ReturnsAsync<Topic, CancellationToken, IResearchService, SummaryResult>(
                 (topic, _) => results.First(r => r.TopicName == topic.Name));
 
         var emailMock = new Mock<IEmailService>();
@@ -43,7 +43,7 @@ public class SummaryWorkerTests
 
         var options = Options.Create(BuildSettings(topics));
         var worker = new SummaryWorker(
-            openClawMock.Object,
+            researchMock.Object,
             emailMock.Object,
             options,
             NullLogger<SummaryWorker>.Instance);
@@ -52,7 +52,7 @@ public class SummaryWorkerTests
         await worker.RunAsync();
 
         // Assert – each topic was researched exactly once
-        openClawMock.Verify(
+        researchMock.Verify(
             s => s.ResearchTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()),
             Times.Exactly(topics.Length));
 
@@ -66,12 +66,12 @@ public class SummaryWorkerTests
     public async Task RunAsync_DoesNotSendMessages_WhenNoTopicsConfigured()
     {
         // Arrange
-        var openClawMock = new Mock<IOpenClawService>();
+        var researchMock = new Mock<IResearchService>();
         var emailMock = new Mock<IEmailService>();
 
         var options = Options.Create(BuildSettings(topics: []));
         var worker = new SummaryWorker(
-            openClawMock.Object,
+            researchMock.Object,
             emailMock.Object,
             options,
             NullLogger<SummaryWorker>.Instance);
@@ -80,7 +80,7 @@ public class SummaryWorkerTests
         await worker.RunAsync();
 
         // Assert
-        openClawMock.Verify(
+        researchMock.Verify(
             s => s.ResearchTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()),
             Times.Never);
         emailMock.Verify(
@@ -98,13 +98,13 @@ public class SummaryWorkerTests
             new Topic { Name = "Topic B" },
         };
 
-        var openClawMock = new Mock<IOpenClawService>();
-        openClawMock
+        var researchMock = new Mock<IResearchService>();
+        researchMock
             .Setup(s => s.ResearchTopicAsync(
                 It.Is<Topic>(t => t.Name == "Topic A"), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SummaryResult { TopicName = "Topic A", IsSuccess = false, ErrorMessage = "Error" });
 
-        openClawMock
+        researchMock
             .Setup(s => s.ResearchTopicAsync(
                 It.Is<Topic>(t => t.Name == "Topic B"), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SummaryResult { TopicName = "Topic B", IsSuccess = true, Summary = "Summary B" });
@@ -116,7 +116,7 @@ public class SummaryWorkerTests
 
         var options = Options.Create(BuildSettings(topics));
         var worker = new SummaryWorker(
-            openClawMock.Object,
+            researchMock.Object,
             emailMock.Object,
             options,
             NullLogger<SummaryWorker>.Instance);
@@ -125,7 +125,7 @@ public class SummaryWorkerTests
         await worker.RunAsync();
 
         // Assert – all topics attempted and summaries (including the failed one) sent
-        openClawMock.Verify(
+        researchMock.Verify(
             s => s.ResearchTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
         emailMock.Verify(

@@ -14,7 +14,7 @@ builder.Services.Configure<AppSettings>(
 builder.Services.AddHttpClient<ICopilotService, CopilotService>();
 
 // Register other services
-builder.Services.AddSingleton<IOpenClawService, OpenClawService>();
+builder.Services.AddSingleton<IResearchService, ResearchService>();
 builder.Services.AddSingleton<IEmailService, EmailService>();
 
 if (runOnce)

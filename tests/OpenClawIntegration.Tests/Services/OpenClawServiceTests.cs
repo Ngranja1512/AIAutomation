@@ -5,7 +5,7 @@ using OpenClawIntegration.Services;
 
 namespace OpenClawIntegration.Tests.Services;
 
-public class OpenClawServiceTests
+public class ResearchServiceTests
 {
     [Fact]
     public async Task ResearchTopicAsync_ReturnsSuccess_WhenCopilotSucceeds()
@@ -16,7 +16,7 @@ public class OpenClawServiceTests
             .Setup(s => s.SummariseTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("Latest AI news summary.");
 
-        var sut = new OpenClawService(copilotMock.Object, NullLogger<OpenClawService>.Instance);
+        var sut = new ResearchService(copilotMock.Object, NullLogger<ResearchService>.Instance);
 
         var topic = new Topic { Name = "AI News", Description = "Artificial intelligence." };
 
@@ -39,7 +39,7 @@ public class OpenClawServiceTests
             .Setup(s => s.SummariseTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Unauthorized"));
 
-        var sut = new OpenClawService(copilotMock.Object, NullLogger<OpenClawService>.Instance);
+        var sut = new ResearchService(copilotMock.Object, NullLogger<ResearchService>.Instance);
 
         var topic = new Topic { Name = "Failing Topic" };
 
@@ -62,7 +62,7 @@ public class OpenClawServiceTests
             .Setup(s => s.SummariseTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("Summary via Copilot.");
 
-        var sut = new OpenClawService(copilotMock.Object, NullLogger<OpenClawService>.Instance);
+        var sut = new ResearchService(copilotMock.Object, NullLogger<ResearchService>.Instance);
 
         var topic = new Topic { Name = "Test" };
 
@@ -87,7 +87,7 @@ public class OpenClawServiceTests
 
         var before = DateTime.UtcNow;
 
-        var sut = new OpenClawService(copilotMock.Object, NullLogger<OpenClawService>.Instance);
+        var sut = new ResearchService(copilotMock.Object, NullLogger<ResearchService>.Instance);
 
         var topic = new Topic { Name = "Time Test" };
 
