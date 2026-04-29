@@ -48,6 +48,9 @@ appsettings.Development.json
 *~
 CodeCoverage/
 
+# JetBrains IDEs (Rider, IntelliJ)
+.idea/
+
 # MSBuild Binary and Structured Log
 *.binlog
 
