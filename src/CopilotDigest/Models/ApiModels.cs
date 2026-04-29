@@ -47,4 +47,10 @@ public class CopilotModel
 {
     [JsonPropertyName("id")]
     public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("task")]
+    public string Task { get; set; } = string.Empty;
 }

@@ -88,10 +88,13 @@ public class CopilotService : ICopilotService
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        var modelsResponse = JsonSerializer.Deserialize<CopilotModelsResponse>(json, JsonOptions);
+        var models = JsonSerializer.Deserialize<List<CopilotModel>>(json, JsonOptions);
 
-        return modelsResponse?.Data.Select(m => m.Id).OrderBy(id => id).ToList()
-               ?? [];
+        return models?
+            .Where(m => m.Task == "chat-completion")
+            .Select(m => m.Name)
+            .OrderBy(n => n)
+            .ToList() ?? [];
     }
 
     private static string BuildPrompt(Topic topic)
