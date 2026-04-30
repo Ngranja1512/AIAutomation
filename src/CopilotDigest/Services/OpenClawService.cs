@@ -9,13 +9,23 @@ namespace CopilotDigest.Services;
 public class ResearchService : IResearchService
 {
     private readonly ICopilotService _copilotService;
+    private readonly IFinancePromptEnricher _financePromptEnricher;
     private readonly ILogger<ResearchService> _logger;
 
     public ResearchService(
         ICopilotService copilotService,
         ILogger<ResearchService> logger)
+        : this(copilotService, new FinancePromptEnricher(), logger)
+    {
+    }
+
+    public ResearchService(
+        ICopilotService copilotService,
+        IFinancePromptEnricher financePromptEnricher,
+        ILogger<ResearchService> logger)
     {
         _copilotService = copilotService;
+        _financePromptEnricher = financePromptEnricher;
         _logger = logger;
     }
 
@@ -24,7 +34,8 @@ public class ResearchService : IResearchService
         try
         {
             _logger.LogInformation("Requesting summary for topic: {Topic}", topic.Name);
-            var summary = await _copilotService.SummariseTopicAsync(topic, cancellationToken);
+            var enrichedTopic = await _financePromptEnricher.EnrichTopicAsync(topic, cancellationToken);
+            var summary = await _copilotService.SummariseTopicAsync(enrichedTopic, cancellationToken);
 
             return new SummaryResult
             {

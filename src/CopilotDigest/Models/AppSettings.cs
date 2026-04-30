@@ -4,6 +4,8 @@ public class AppSettings
 {
     public CopilotSettings Copilot { get; set; } = new();
     public EmailSettings Email { get; set; } = new();
+    public MarketDataSettings MarketData { get; set; } = new();
+    public NewsSettings News { get; set; } = new();
     public SchedulerSettings Scheduler { get; set; } = new();
     public List<Topic> Topics { get; set; } = [];
 }
