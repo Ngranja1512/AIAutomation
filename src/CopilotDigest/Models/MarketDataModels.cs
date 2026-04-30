@@ -15,10 +15,13 @@ public class NewsSettings
 {
     public bool Enabled { get; set; } = true;
 
-    /// <summary>Maximum headlines to take from each RSS feed.</summary>
+    /// <summary>Maximum headlines per macro/index RSS feed.</summary>
     public int MaxItemsPerFeed { get; set; } = 5;
 
-    /// <summary>RSS feed URLs to poll. Defaults to built-in Yahoo Finance feeds when empty.</summary>
+    /// <summary>Maximum headlines per individual stock RSS feed.</summary>
+    public int MaxItemsPerStockFeed { get; set; } = 3;
+
+    /// <summary>RSS feed URLs to poll. When non-empty, overrides all built-in feeds.</summary>
     public List<string> FeedUrls { get; set; } = [];
 }
 

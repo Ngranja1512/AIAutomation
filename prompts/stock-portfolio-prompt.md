@@ -55,10 +55,10 @@ Analyse the portfolio above and produce a structured weekly review following the
 
 **For each individual stock (not ETFs or crypto):**
 - If a `Live Market Data Snapshot` is present, use the injected price and % change as the primary data point.
-- Valuation metrics (P/E, forward P/E, EV/EBITDA): use only if you have high confidence the figure is current (within the last 6 months). If uncertain, state "valuation data unavailable — check a live source" and skip the metric rather than citing a potentially stale figure.
+- If a `Recent Macro & Market News` section is present, scan it for any headlines directly mentioning this company, its sector, or a known macro driver for this stock. Cite relevant headlines and explain their impact on the thesis. Do not invent news that is not in the section.
+- Valuation metrics (P/E, forward P/E, EV/EBITDA): skip entirely — these figures change frequently and are not reliably current. Do not cite training-data values.
 - Business quality assessment: competitive moat, revenue model, margin structure, and balance sheet resilience — these change slowly and are appropriate for qualitative analysis even without live data.
 - Relative positioning vs. 2–3 closest competitors: focus on structural advantages/disadvantages rather than point-in-time ratios.
-- Any known significant events since your training cutoff that could materially affect the thesis (flag clearly if you are uncertain whether an event has occurred).
 - Explicit recommendation: **Reinforce** / **Hold** / **Consider Selling**
 
 **For ETFs:**
