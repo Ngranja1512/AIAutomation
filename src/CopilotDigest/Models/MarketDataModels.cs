@@ -11,6 +11,28 @@ public class MarketDataSettings
     public List<TickerMapping> SymbolMappings { get; set; } = [];
 }
 
+public class NewsSettings
+{
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Maximum headlines to take from each RSS feed.</summary>
+    public int MaxItemsPerFeed { get; set; } = 5;
+
+    /// <summary>RSS feed URLs to poll. Defaults to built-in Yahoo Finance feeds when empty.</summary>
+    public List<string> FeedUrls { get; set; } = [];
+}
+
+public class NewsItem
+{
+    public string Title { get; init; } = string.Empty;
+
+    public string? Description { get; init; }
+
+    public string? Source { get; init; }
+
+    public DateTimeOffset? PublishedAt { get; init; }
+}
+
 public class TickerMapping
 {
     public string DisplayTicker { get; set; } = string.Empty;

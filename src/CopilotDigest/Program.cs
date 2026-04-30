@@ -13,6 +13,7 @@ builder.Services.Configure<AppSettings>(
 // Register HTTP clients
 builder.Services.AddHttpClient<ICopilotService, CopilotService>();
 builder.Services.AddHttpClient<IFreeMarketDataService, FreeMarketDataService>();
+builder.Services.AddHttpClient<IMarketNewsService, YahooFinanceNewsService>();
 
 // Register other services
 builder.Services.AddSingleton<IFinancePromptEnricher, FinancePromptEnricher>();

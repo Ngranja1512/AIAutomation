@@ -6,23 +6,35 @@ using CopilotDigest.Models;
 namespace CopilotDigest.Services;
 
 /// <summary>
-/// Detects holdings embedded in a markdown portfolio prompt and prepends a live market snapshot.
+/// Detects holdings embedded in a markdown portfolio prompt and prepends a live market snapshot
+/// plus recent macro news headlines.
 /// </summary>
 public class FinancePromptEnricher : IFinancePromptEnricher
 {
     private readonly IFreeMarketDataService _marketDataService;
+    private readonly IMarketNewsService _newsService;
     private readonly ILogger<FinancePromptEnricher> _logger;
 
     public FinancePromptEnricher()
-        : this(new EmptyMarketDataService(), NullLogger<FinancePromptEnricher>.Instance)
+        : this(new EmptyMarketDataService(), new EmptyNewsService(), NullLogger<FinancePromptEnricher>.Instance)
+    {
+    }
+
+    // Kept for backward compatibility (used by existing tests).
+    public FinancePromptEnricher(
+        IFreeMarketDataService marketDataService,
+        ILogger<FinancePromptEnricher> logger)
+        : this(marketDataService, new EmptyNewsService(), logger)
     {
     }
 
     public FinancePromptEnricher(
         IFreeMarketDataService marketDataService,
+        IMarketNewsService newsService,
         ILogger<FinancePromptEnricher> logger)
     {
         _marketDataService = marketDataService;
+        _newsService = newsService;
         _logger = logger;
     }
 
@@ -52,17 +64,38 @@ public class FinancePromptEnricher : IFinancePromptEnricher
             return topic;
         }
 
-        if (snapshots.Count == 0)
+        IReadOnlyList<NewsItem> newsItems;
+        try
+        {
+            newsItems = await _newsService.GetMacroNewsAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch macro news for topic {Topic}", topic.Name);
+            newsItems = [];
+        }
+
+        if (snapshots.Count == 0 && newsItems.Count == 0)
         {
             return topic;
         }
 
-        var marketDataSection = BuildMarketDataSection(snapshots);
+        var prefix = new StringBuilder();
+        if (snapshots.Count > 0)
+        {
+            prefix.AppendLine(BuildMarketDataSection(snapshots));
+        }
+        if (newsItems.Count > 0)
+        {
+            prefix.AppendLine();
+            prefix.AppendLine(BuildNewsSection(newsItems));
+        }
+
         return new Topic
         {
             Name = topic.Name,
             Description = topic.Description,
-            Prompt = $"{marketDataSection}\n\n{topic.Prompt}",
+            Prompt = $"{prefix.ToString().TrimEnd()}\n\n{topic.Prompt}",
         };
     }
 
@@ -217,6 +250,32 @@ public class FinancePromptEnricher : IFinancePromptEnricher
     private static bool IsCrypto(MarketSnapshot snapshot) =>
         string.Equals(snapshot.AssetType, "Crypto", StringComparison.OrdinalIgnoreCase);
 
+    private static string BuildNewsSection(IReadOnlyList<NewsItem> items)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("## Recent Macro & Market News");
+        builder.AppendLine($"Retrieved: {DateTimeOffset.UtcNow:O}");
+        builder.AppendLine();
+
+        foreach (var item in items)
+        {
+            var timestamp = item.PublishedAt.HasValue
+                ? item.PublishedAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm 'UTC'", CultureInfo.InvariantCulture)
+                : "date unknown";
+            var source = string.IsNullOrWhiteSpace(item.Source) ? "Yahoo Finance" : item.Source;
+
+            builder.Append($"- [{timestamp} | {source}] ");
+            builder.AppendLine(item.Title);
+
+            if (!string.IsNullOrWhiteSpace(item.Description))
+            {
+                builder.AppendLine($"  {item.Description}");
+            }
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
     private sealed class EmptyMarketDataService : IFreeMarketDataService
     {
         public Task<IReadOnlyList<MarketSnapshot>> GetSnapshotsAsync(
@@ -225,5 +284,11 @@ public class FinancePromptEnricher : IFinancePromptEnricher
         {
             return Task.FromResult<IReadOnlyList<MarketSnapshot>>([]);
         }
+    }
+
+    private sealed class EmptyNewsService : IMarketNewsService
+    {
+        public Task<IReadOnlyList<NewsItem>> GetMacroNewsAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<NewsItem>>([]);
     }
 }
