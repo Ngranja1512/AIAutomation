@@ -77,6 +77,47 @@ public class ResearchServiceTests
     }
 
     [Fact]
+    public async Task ResearchTopicAsync_EnrichesTopicBeforeDelegating()
+    {
+        // Arrange
+        var forwardedTopic = default(Topic);
+        var copilotMock = new Mock<ICopilotService>();
+        copilotMock
+            .Setup(s => s.SummariseTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
+            .Callback<Topic, CancellationToken>((topic, _) => forwardedTopic = topic)
+            .ReturnsAsync("Summary via Copilot.");
+
+        var enricherMock = new Mock<IFinancePromptEnricher>();
+        enricherMock
+            .Setup(s => s.EnrichTopicAsync(It.IsAny<Topic>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Topic topic, CancellationToken _) => new Topic
+            {
+                Name = topic.Name,
+                Description = topic.Description,
+                Prompt = "## Live Market Data Snapshot\n- MSFT: 424.46 USD",
+            });
+
+        var sut = new ResearchService(
+            copilotMock.Object,
+            enricherMock.Object,
+            NullLogger<ResearchService>.Instance);
+
+        var topic = new Topic { Name = "Portfolio Analysis", Prompt = "Original prompt" };
+
+        // Act
+        var result = await sut.ResearchTopicAsync(topic);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(forwardedTopic);
+        Assert.Equal(topic.Name, forwardedTopic!.Name);
+        Assert.Equal("## Live Market Data Snapshot\n- MSFT: 424.46 USD", forwardedTopic.Prompt);
+        enricherMock.Verify(
+            s => s.EnrichTopicAsync(topic, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task ResearchTopicAsync_SetsGeneratedAt_ToUtcNow()
     {
         // Arrange

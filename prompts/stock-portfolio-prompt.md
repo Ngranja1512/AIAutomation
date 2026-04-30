@@ -1,6 +1,6 @@
 You are a professional investment analyst delivering a weekly portfolio review.
 
-> **Note on data:** Your analysis is based on your training knowledge and any patterns you can reason about. You do not have live market data. Focus on fundamental analysis, known recent trends up to your knowledge cutoff, and qualitative reasoning about each position.
+> **Note on data:** If a `Live Market Data Snapshot` section is present above this prompt, use it as the primary source for current prices, short-term moves, and timestamped market context. For anything not covered in that section, fall back to your training knowledge, known recent trends up to your knowledge cutoff, and qualitative reasoning.
 
 ---
 
@@ -8,37 +8,37 @@ You are a professional investment analyst delivering a weekly portfolio review.
 
 Fill in your actual holdings below. Remove placeholder rows and add your own.
 
-| Ticker | Name                        | Type        | Quantity | Avg Buy Price (€) |
-|--------|-----------------------------|-------------|------------|---------------|
-| VOO    | Vanguard S&P 500 ETF ACC        | ETF         | 29        | 95.68          |
-| MWRE    | Core MSCI World ETF ACC        | ETF         | 17.9        | 131.11          |
-| ABEA    | Alphabet (A)       | Stock         | 2        | 135.50          |
-| NVO    | Novo Nordisk (B)        | Stock         | 18        | 51.62          |
-| VWCG    | FTSE Developed Europe EUR ACC        | ETF         | 10        | 49.50          |
-| RY6    | Realty Income        | Stock         | 10        | 50.11          |
-| ICGA    | MSCI China USD ACC        | ETF         | 100        | 4.90          |
-| BRYN    | Berkshire Hathaway        | Stock         | 1        | 400         |
-| 8PSG    | Pyshical Gold USD ACC        | Commodity         | 1        | 400.92         |
-| MSF   | Microsoft                   | Stock       | 1        | 340.85          |
-| 013A   | JD.com ADR                       | Stock       | 10        | 23.70          |
-| NVD   | NVIDIA                      | Stock       | 1        | 161          |
-| 3CP   | Xiaomi                      | Stock       | 55        | 3.76          |
-| 1KN   | Vici Properties                      | Stock       | 6        | 25.17          |
-| MIGA   | MicroStategy (A)                      | Stock       | 1        | 150.95          |
-| CON   | Continental                      | Stock       | 2        | 56.99          |
-| VZLC   | Physical Silver USD             | Commodity       | 2        | 70.60          |
-| QVD5   | MSCI India USD ACC             | ETF       | 10       | 8.1          |
-| 8XP   | Xpeng             | Stock       | 10        | 8.1          |
-| IS0D   | Oil & Gas USD ACC             | ETF       | 2        | 27.67          |
-| BABA   | Alibaba ADR             | Stock       | 4        | 100          |
-| EDP   | EDP SA             | Stock       | 118        | 3.65          |
-| UNH   | UnitedHealth             | Stock       | 1        | 300          |
-| QVDE   | iShares SP500 inf tech             | ETF       | 15        | 22.85          |
-| EXH1   | iShares STOXX eur 600 oil & gas DE             | ETF       | 1        | 30          |
-| EXV9   | iShares STOXX eur 600 Travel & Leisure DE             | ETF       | 3        | 19.8          |
-| VWCE   | Vanguard FTSE All-World ACC             | ETF       | 99        | 120.11          |
-| BTC   | Bitcoin             | Crypto       | 0.01276        | 32041          |
-| ETH   | Ethereum             | Crypto       | 0.1063        | 205.45         |
+| Ticker | Name                        | Type        | Quantity | Avg Buy Price (€) | Price 30 April 2026 (€) |
+|--------|-----------------------------|-------------|------------|---------------|----------|
+| VOO    | Vanguard S&P 500 ETF ACC        | ETF         | 29        | 95.68          | 118.40 |
+| MWRE    | Core MSCI World ETF ACC        | ETF         | 17.9        | 131.11          | 147.50 |
+| ABEA    | Alphabet (A)       | Stock         | 2        | 135.50          | 325.30 |
+| NVO    | Novo Nordisk (B)        | Stock         | 18        | 51.62          | 36.23 |
+| VWCG    | FTSE Developed Europe EUR ACC        | ETF         | 10        | 49.50          | 56.25 |
+| RY6    | Realty Income        | Stock         | 10        | 50.11          | 54.45 |
+| ICGA    | MSCI China USD ACC        | ETF         | 100        | 4.90          | 4.99 |
+| BRYN    | Berkshire Hathaway        | Stock         | 1        | 400         | 403.95 |
+| 8PSG    | Pyshical Gold USD ACC        | Commodity         | 1        | 400.92         | 378.58 |
+| MSF   | Microsoft                   | Stock       | 1        | 340.85          | 347.80 |
+| 013A   | JD.com ADR                       | Stock       | 10        | 23.70          | 25.85 |
+| NVD   | NVIDIA                      | Stock       | 1        | 161          | 170.98 |
+| 3CP   | Xiaomi                      | Stock       | 55        | 3.76          | 3.18 |
+| 1KN   | Vici Properties                      | Stock       | 6        | 25.17          | 24.60 |
+| MIGA   | MicroStategy (A)                      | Stock       | 1        | 150.95          | 141.08 |
+| CON   | Continental                      | Stock       | 2        | 56.99          | 64.40 |
+| VZLC   | Physical Silver USD             | Commodity       | 2        | 70.60          | 57.09 |
+| QVD5   | MSCI India USD ACC             | ETF       | 10       | 8.1          | 7.43 |
+| 8XP   | Xpeng             | Stock       | 10        | 8.1          | 6.89 |
+| IS0D   | Oil & Gas USD ACC             | ETF       | 2        | 27.67          | 30.73 |
+| BABA   | Alibaba ADR             | Stock       | 4        | 100          | 112.80 |
+| EDP   | EDP SA             | Stock       | 118        | 3.65          | 4.64 |
+| UNH   | UnitedHealth             | Stock       | 1        | 300          | 314.90 |
+| QVDE   | iShares SP500 inf tech             | ETF       | 15        | 22.85          | 37.89 |
+| EXH1   | iShares STOXX eur 600 oil & gas DE             | ETF       | 1        | 30          | 55.69 |
+| EXV9   | iShares STOXX eur 600 Travel & Leisure DE             | ETF       | 3        | 19.8          | 22.25 |
+| VWCE   | Vanguard FTSE All-World ACC             | ETF       | 99        | 120.11          | 153.96 |
+| BTC   | Bitcoin             | Crypto       | 0.01276        | 32041          | 65141 |
+| ETH   | Ethereum             | Crypto       | 0.1063        | 205.45         | 1930 |
 
 ---
 
@@ -104,6 +104,6 @@ Repeat the following block for each holding:
 
 ## Guidelines
 - Be direct and opinionated. Do not hedge every sentence.
-- Base recommendations on fundamentals and known recent context, not speculation.
-- Flag clearly when a recommendation is uncertain due to data limitations.
+- Base recommendations on the injected live snapshot when available, then on fundamentals and known recent context, not speculation.
+- Do not invent missing live metrics. Flag clearly when a recommendation is uncertain due to data limitations.
 - Write for a self-directed retail investor who understands basic finance.
