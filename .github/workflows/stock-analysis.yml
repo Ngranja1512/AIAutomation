@@ -1,9 +1,10 @@
-name: Weekly Portfolio Analysis
+name: Weekday Portfolio Analysis
 
 on:
   schedule:
-    # Runs every Monday at 07:00 UTC (before markets open in Europe).
-    - cron: "0 7 * * 1"
+    # Runs Monday-Friday at 07:00 UTC, which aligns with European market open
+    # during summer time and remains in the morning during winter time.
+    - cron: "0 7 * * 1-5"
   workflow_dispatch:
     inputs:
       run_immediately:
