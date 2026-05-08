@@ -45,7 +45,7 @@ jobs:
       - name: Validate Copilot API access
         env:
           COPILOT_TOKEN: ${{ secrets.COPILOT_TOKEN }}
-          COPILOT_MODEL: openai/gpt-5
+          COPILOT_MODEL: gpt-5
           COPILOT_API_URL: ${{ vars.COPILOT_API_URL || 'https://models.inference.ai.azure.com' }}
         run: |
           set -euo pipefail
@@ -54,6 +54,51 @@ jobs:
             echo "COPILOT_TOKEN is not configured."
             exit 1
           fi
+
+          echo "--- Models available for this token ---"
+          curl -sS \
+            "${COPILOT_API_URL%/}/models" \
+            -H "Authorization: Bearer ${COPILOT_TOKEN}" | \
+            jq -r '(.data // .) | .[] | .id' 2>/dev/null || true
+          echo "---"
+
+          response_file="$(mktemp)"
+          payload_file="$(mktemp)"
+          trap 'rm -f "${response_file}" "${payload_file}"' EXIT
+
+          cat > "${payload_file}" <<EOF
+          {
+            "model": "${COPILOT_MODEL}",
+            "messages": [
+              {
+                "role": "user",
+                "content": "Reply with exactly: Copilot pipeline auth OK"
+              }
+            ],
+            "max_tokens": 32
+          }
+          EOF
+
+          http_code="$(
+            curl -sS \
+              -o "${response_file}" \
+              -w "%{http_code}" \
+              -X POST "${COPILOT_API_URL%/}/chat/completions" \
+              -H "Authorization: Bearer ${COPILOT_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -H "Copilot-Integration-Id: copilot-daily-digest-ci" \
+              --data-binary "@${payload_file}"
+          )"
+
+          if [ "${http_code}" -lt 200 ] || [ "${http_code}" -ge 300 ]; then
+            echo "Copilot API preflight failed with HTTP ${http_code}."
+            cat "${response_file}"
+            exit 1
+          fi
+
+          echo "Copilot API preflight succeeded with HTTP ${http_code}."
+          head -c 400 "${response_file}"
+          echo
 
           response_file="$(mktemp)"
           payload_file="$(mktemp)"
