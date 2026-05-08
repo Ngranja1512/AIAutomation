@@ -45,7 +45,7 @@ jobs:
       - name: Validate Copilot API access
         env:
           COPILOT_TOKEN: ${{ secrets.COPILOT_TOKEN }}
-          COPILOT_MODEL: gpt-5
+          COPILOT_MODEL: gpt-5.4
           COPILOT_API_URL: ${{ vars.COPILOT_API_URL || 'https://models.inference.ai.azure.com' }}
         run: |
           set -euo pipefail
