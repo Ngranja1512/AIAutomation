@@ -42,6 +42,52 @@ jobs:
             echo "PROMPT_EOF"
           } >> "$GITHUB_ENV"
 
+      - name: Validate Copilot API access
+        env:
+          COPILOT_TOKEN: ${{ secrets.COPILOT_TOKEN }}
+          COPILOT_MODEL: ${{ vars.COPILOT_MODEL || 'gpt-4.1' }}
+          COPILOT_API_URL: ${{ vars.COPILOT_API_URL || 'https://models.inference.ai.azure.com' }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${COPILOT_TOKEN}" ]; then
+            echo "COPILOT_TOKEN is not configured."
+            exit 1
+          fi
+
+          response_file="$(mktemp)"
+          http_code="$({
+            curl -sS \
+              -o "${response_file}" \
+              -w "%{http_code}" \
+              -X POST "${COPILOT_API_URL%/}/chat/completions" \
+              -H "Authorization: Bearer ${COPILOT_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -H "Copilot-Integration-Id: copilot-daily-digest-ci" \
+              -d @- <<EOF
+          {
+            "model": "${COPILOT_MODEL}",
+            "messages": [
+              {
+                "role": "user",
+                "content": "Reply with exactly: Copilot pipeline auth OK"
+              }
+            ],
+            "max_tokens": 32
+          }
+          EOF
+          )"
+
+          if [ "${http_code}" -lt 200 ] || [ "${http_code}" -ge 300 ]; then
+            echo "Copilot API preflight failed with HTTP ${http_code}."
+            cat "${response_file}"
+            exit 1
+          fi
+
+          echo "Copilot API preflight succeeded with HTTP ${http_code}."
+          head -c 400 "${response_file}"
+          echo
+
       - name: Run portfolio analysis (one-shot)
         env:
           # GitHub Copilot token
