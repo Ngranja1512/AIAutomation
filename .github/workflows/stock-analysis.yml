@@ -56,15 +56,10 @@ jobs:
           fi
 
           response_file="$(mktemp)"
-          http_code="$({
-            curl -sS \
-              -o "${response_file}" \
-              -w "%{http_code}" \
-              -X POST "${COPILOT_API_URL%/}/chat/completions" \
-              -H "Authorization: Bearer ${COPILOT_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -H "Copilot-Integration-Id: copilot-daily-digest-ci" \
-              -d @- <<EOF
+          payload_file="$(mktemp)"
+          trap 'rm -f "${response_file}" "${payload_file}"' EXIT
+
+          cat > "${payload_file}" <<EOF
           {
             "model": "${COPILOT_MODEL}",
             "messages": [
@@ -76,6 +71,16 @@ jobs:
             "max_tokens": 32
           }
           EOF
+
+          http_code="$(
+            curl -sS \
+              -o "${response_file}" \
+              -w "%{http_code}" \
+              -X POST "${COPILOT_API_URL%/}/chat/completions" \
+              -H "Authorization: Bearer ${COPILOT_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -H "Copilot-Integration-Id: copilot-daily-digest-ci" \
+              --data-binary "@${payload_file}"
           )"
 
           if [ "${http_code}" -lt 200 ] || [ "${http_code}" -ge 300 ]; then
