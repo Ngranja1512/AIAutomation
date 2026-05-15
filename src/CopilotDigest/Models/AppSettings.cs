@@ -8,6 +8,7 @@ public class AppSettings
     public NewsSettings News { get; set; } = new();
     public InsiderDataSettings InsiderData { get; set; } = new();
     public FinancialDataSettings FinancialData { get; set; } = new();
+    public AlphaVantageSettings AlphaVantage { get; set; } = new();
     public SchedulerSettings Scheduler { get; set; } = new();
     public List<Topic> Topics { get; set; } = [];
 }

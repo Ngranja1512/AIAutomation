@@ -136,6 +136,12 @@ public class FinancialDataSettings
     public string QuoteV7Url { get; set; } = "https://query1.finance.yahoo.com/v7/finance/quote";
 }
 
+public class AlphaVantageSettings
+{
+    public string ApiKey { get; set; } = string.Empty;
+    public string BaseUrl { get; set; } = "https://www.alphavantage.co/query";
+}
+
 public record AnnualFinancials(int Year, decimal? Revenue, decimal? NetIncome);
 
 public class FinancialSnapshot

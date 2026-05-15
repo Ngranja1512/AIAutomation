@@ -62,8 +62,9 @@ jobs:
           CopilotDigest__InsiderData__Enabled: "true"
           CopilotDigest__InsiderData__MaxFilings: "5"
           CopilotDigest__InsiderData__ContactEmail: ${{ secrets.EMAIL_FROM_ADDRESS }}
-          # Financial fundamentals enabled — Yahoo Finance quoteSummary (live data)
+          # Financial fundamentals — Alpha Vantage (works from CI/CD; free key at alphavantage.co)
           CopilotDigest__FinancialData__Enabled: "true"
+          CopilotDigest__AlphaVantage__ApiKey: ${{ secrets.ALPHA_VANTAGE_KEY }}
           # Single topic: the parameterised deep-dive prompt
           CopilotDigest__Topics__0__Name: "Stock Deep Dive — ${{ github.event.inputs.ticker }}"
           CopilotDigest__Topics__0__Prompt: ${{ env.DEEP_DIVE_PROMPT }}
