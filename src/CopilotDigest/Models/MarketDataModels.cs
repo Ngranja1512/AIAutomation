@@ -82,3 +82,25 @@ public class MarketSnapshot
 
     public string? Note { get; init; }
 }
+
+public class InsiderTrade
+{
+    public string InsiderName { get; init; } = string.Empty;
+    public string InsiderTitle { get; init; } = string.Empty;
+    /// <summary>"A" = Acquired (buy), "D" = Disposed (sell).</summary>
+    public string AcquiredOrDisposed { get; init; } = string.Empty;
+    public decimal? Shares { get; init; }
+    public decimal? PricePerShare { get; init; }
+    public DateOnly? TransactionDate { get; init; }
+}
+
+public class InsiderDataSettings
+{
+    public bool Enabled { get; set; } = true;
+    public int MaxFilings { get; set; } = 5;
+    /// <summary>
+    /// Appears in the User-Agent header sent to SEC EDGAR.
+    /// SEC policy requires a working contact address.
+    /// </summary>
+    public string ContactEmail { get; set; } = "contact@example.com";
+}

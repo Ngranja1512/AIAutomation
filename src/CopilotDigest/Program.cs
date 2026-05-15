@@ -17,6 +17,7 @@ builder.Services.AddHttpClient<ICopilotService, CopilotService>(client =>
 });
 builder.Services.AddHttpClient<IFreeMarketDataService, FreeMarketDataService>();
 builder.Services.AddHttpClient<IMarketNewsService, YahooFinanceNewsService>();
+builder.Services.AddHttpClient<IInsiderDataService, SecEdgarInsiderDataService>();
 
 // Register other services
 builder.Services.AddSingleton<IFinancePromptEnricher, FinancePromptEnricher>();

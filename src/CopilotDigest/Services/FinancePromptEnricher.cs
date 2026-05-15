@@ -13,10 +13,12 @@ public class FinancePromptEnricher : IFinancePromptEnricher
 {
     private readonly IFreeMarketDataService _marketDataService;
     private readonly IMarketNewsService _newsService;
+    private readonly IInsiderDataService _insiderDataService;
     private readonly ILogger<FinancePromptEnricher> _logger;
 
     public FinancePromptEnricher()
-        : this(new EmptyMarketDataService(), new EmptyNewsService(), NullLogger<FinancePromptEnricher>.Instance)
+        : this(new EmptyMarketDataService(), new EmptyNewsService(),
+               new EmptyInsiderDataService(), NullLogger<FinancePromptEnricher>.Instance)
     {
     }
 
@@ -24,7 +26,8 @@ public class FinancePromptEnricher : IFinancePromptEnricher
     public FinancePromptEnricher(
         IFreeMarketDataService marketDataService,
         ILogger<FinancePromptEnricher> logger)
-        : this(marketDataService, new EmptyNewsService(), logger)
+        : this(marketDataService, new EmptyNewsService(),
+               new EmptyInsiderDataService(), logger)
     {
     }
 
@@ -32,10 +35,21 @@ public class FinancePromptEnricher : IFinancePromptEnricher
         IFreeMarketDataService marketDataService,
         IMarketNewsService newsService,
         ILogger<FinancePromptEnricher> logger)
+        : this(marketDataService, newsService,
+               new EmptyInsiderDataService(), logger)
     {
-        _marketDataService = marketDataService;
-        _newsService = newsService;
-        _logger = logger;
+    }
+
+    public FinancePromptEnricher(
+        IFreeMarketDataService marketDataService,
+        IMarketNewsService newsService,
+        IInsiderDataService insiderDataService,
+        ILogger<FinancePromptEnricher> logger)
+    {
+        _marketDataService  = marketDataService;
+        _newsService        = newsService;
+        _insiderDataService = insiderDataService;
+        _logger             = logger;
     }
 
     public async Task<Topic> EnrichTopicAsync(Topic topic, CancellationToken cancellationToken = default)
@@ -75,7 +89,44 @@ public class FinancePromptEnricher : IFinancePromptEnricher
             newsItems = [];
         }
 
-        if (snapshots.Count == 0 && newsItems.Count == 0)
+        // Fetch insider trades for direct stock holdings only (skip ETFs, Crypto, Commodities).
+        var insiderTrades = new Dictionary<string, IReadOnlyList<InsiderTrade>>(StringComparer.OrdinalIgnoreCase);
+        var snapshotByTicker = snapshots.ToDictionary(s => s.Ticker, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var holding in holdings)
+        {
+            if (!IsDirectStock(holding.Type))
+            {
+                continue;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Prefer the provider symbol (e.g. "MSFT" for display ticker "MSF") when it has
+            // no exchange suffix (no dot); otherwise fall back to the display ticker.
+            var edgarTicker = holding.Ticker;
+            if (snapshotByTicker.TryGetValue(holding.Ticker, out var snap) &&
+                !string.IsNullOrWhiteSpace(snap.ProviderSymbol) &&
+                !snap.ProviderSymbol.Contains('.'))
+            {
+                edgarTicker = snap.ProviderSymbol;
+            }
+
+            try
+            {
+                var trades = await _insiderDataService.GetRecentTradesAsync(edgarTicker, cancellationToken);
+                if (trades.Count > 0)
+                {
+                    insiderTrades[holding.Ticker] = trades;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch insider data for {Ticker}", holding.Ticker);
+            }
+        }
+
+        if (snapshots.Count == 0 && newsItems.Count == 0 && insiderTrades.Count == 0)
         {
             return topic;
         }
@@ -89,6 +140,11 @@ public class FinancePromptEnricher : IFinancePromptEnricher
         {
             prefix.AppendLine();
             prefix.AppendLine(BuildNewsSection(newsItems));
+        }
+        if (insiderTrades.Count > 0)
+        {
+            prefix.AppendLine();
+            prefix.AppendLine(BuildInsiderSection(insiderTrades));
         }
 
         return new Topic
@@ -290,5 +346,65 @@ public class FinancePromptEnricher : IFinancePromptEnricher
     {
         public Task<IReadOnlyList<NewsItem>> GetMacroNewsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<NewsItem>>([]);
+    }
+
+    private sealed class EmptyInsiderDataService : IInsiderDataService
+    {
+        public Task<IReadOnlyList<InsiderTrade>> GetRecentTradesAsync(
+            string ticker,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<InsiderTrade>>([]);
+    }
+
+    private static bool IsDirectStock(string assetType) =>
+        string.Equals(assetType, "Stock", StringComparison.OrdinalIgnoreCase);
+
+    private static string BuildInsiderSection(
+        IReadOnlyDictionary<string, IReadOnlyList<InsiderTrade>> tradesByTicker)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("## Recent Insider Activity");
+        sb.AppendLine($"Retrieved: {DateTimeOffset.UtcNow:O}");
+        sb.AppendLine("Source: SEC EDGAR Form 4 filings (non-derivative transactions only).");
+        sb.AppendLine();
+
+        foreach (var (ticker, trades) in tradesByTicker)
+        {
+            sb.AppendLine($"### {ticker}");
+
+            foreach (var t in trades)
+            {
+                var direction = t.AcquiredOrDisposed switch
+                {
+                    "A" => "BUY",
+                    "D" => "SELL",
+                    _   => t.AcquiredOrDisposed,
+                };
+
+                var date = t.TransactionDate.HasValue
+                    ? t.TransactionDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                    : "date unknown";
+
+                var shares = t.Shares.HasValue
+                    ? t.Shares.Value.ToString("N0", CultureInfo.InvariantCulture) + " shares"
+                    : "unknown shares";
+
+                var price = t.PricePerShare.HasValue
+                    ? "@ $" + t.PricePerShare.Value.ToString("0.##", CultureInfo.InvariantCulture)
+                    : string.Empty;
+
+                var total = (t.Shares.HasValue && t.PricePerShare.HasValue)
+                    ? $" = ${t.Shares.Value * t.PricePerShare.Value:N0}"
+                    : string.Empty;
+
+                var title = string.IsNullOrWhiteSpace(t.InsiderTitle) ? "" : $" ({t.InsiderTitle})";
+
+                sb.AppendLine($"- {date}: {t.InsiderName}{title} — **{direction}** {shares} {price}{total}");
+            }
+
+            sb.AppendLine();
+        }
+
+        return sb.ToString().TrimEnd();
     }
 }

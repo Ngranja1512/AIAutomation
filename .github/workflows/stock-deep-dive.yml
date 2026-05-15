@@ -1,20 +1,18 @@
-name: Weekday Portfolio Analysis
+name: Stock Deep Dive
 
 on:
-  schedule:
-    # Runs Monday-Friday at 07:00 UTC, which aligns with European market open
-    # during summer time and remains in the morning during winter time.
-    - cron: "0 7 * * 1-5"
   workflow_dispatch:
     inputs:
-      run_immediately:
-        description: "Run the portfolio analysis immediately (one-shot mode)"
-        required: false
-        default: "true"
+      ticker:
+        description: "Stock ticker symbol (e.g. NVDA, MSFT, AAPL)"
+        required: true
+      stock_name:
+        description: "Company name (e.g. NVIDIA, Microsoft, Apple)"
+        required: true
 
 jobs:
-  run-portfolio-analysis:
-    name: Run Portfolio Analysis
+  run-deep-dive:
+    name: Run Stock Deep Dive
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,24 +32,25 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
-      - name: Load portfolio prompt from file
+      - name: Load and parameterise deep-dive prompt
         run: |
           {
-            echo "PORTFOLIO_PROMPT<<PROMPT_EOF"
-            cat prompts/stock-portfolio-prompt.md
+            echo "DEEP_DIVE_PROMPT<<PROMPT_EOF"
+            sed \
+              -e "s/{{TICKER}}/${{ github.event.inputs.ticker }}/g" \
+              -e "s/{{STOCK_NAME}}/${{ github.event.inputs.stock_name }}/g" \
+              prompts/stock-deep-dive-prompt.md
             echo "PROMPT_EOF"
           } >> "$GITHUB_ENV"
-           
-      - name: Run portfolio analysis (one-shot)
+
+      - name: Run stock deep dive (one-shot)
         env:
           # GitHub Copilot token
           CopilotDigest__Copilot__Token: ${{ secrets.COPILOT_TOKEN }}
           # Model — gpt-4.1 has strong reasoning for financial analysis
           CopilotDigest__Copilot__Model: ${{ vars.COPILOT_MODEL || 'gpt-4.1' }}
-          # Higher token limit for detailed per-position breakdowns
-          CopilotDigest__Copilot__MaxTokens: ${{ vars.COPILOT_MAX_TOKENS || '4000' }}
-          # Insider data disabled for portfolio pipeline (avoids ~70 SEC EDGAR requests)
-          CopilotDigest__InsiderData__Enabled: "false"
+          # Higher token limit for full 9-section report
+          CopilotDigest__Copilot__MaxTokens: ${{ vars.COPILOT_MAX_TOKENS || '6000' }}
           # Email / SMTP notification settings
           CopilotDigest__Email__SmtpHost: ${{ secrets.SMTP_HOST }}
           CopilotDigest__Email__SmtpPort: ${{ vars.SMTP_PORT || '587' }}
@@ -59,9 +58,13 @@ jobs:
           CopilotDigest__Email__Password: ${{ secrets.SMTP_PASSWORD }}
           CopilotDigest__Email__FromAddress: ${{ secrets.EMAIL_FROM_ADDRESS }}
           CopilotDigest__Email__ToAddress: ${{ secrets.EMAIL_TO_ADDRESS }}
-          # Single topic: the full portfolio analysis prompt
-          CopilotDigest__Topics__0__Name: "Portfolio Analysis"
-          CopilotDigest__Topics__0__Prompt: ${{ env.PORTFOLIO_PROMPT }}
+          # Insider data enabled — SEC EDGAR Form 4 filings for the target stock
+          CopilotDigest__InsiderData__Enabled: "true"
+          CopilotDigest__InsiderData__MaxFilings: "5"
+          CopilotDigest__InsiderData__ContactEmail: ${{ secrets.EMAIL_FROM_ADDRESS }}
+          # Single topic: the parameterised deep-dive prompt
+          CopilotDigest__Topics__0__Name: "Stock Deep Dive — ${{ github.event.inputs.ticker }}"
+          CopilotDigest__Topics__0__Prompt: ${{ env.DEEP_DIVE_PROMPT }}
         run: |
           dotnet run \
             --project src/CopilotDigest/CopilotDigest.csproj \
