@@ -18,7 +18,14 @@ builder.Services.AddHttpClient<ICopilotService, CopilotService>(client =>
 builder.Services.AddHttpClient<IFreeMarketDataService, FreeMarketDataService>();
 builder.Services.AddHttpClient<IMarketNewsService, YahooFinanceNewsService>();
 builder.Services.AddHttpClient<IInsiderDataService, SecEdgarInsiderDataService>();
-builder.Services.AddHttpClient<IFinancialDataService, YahooFinanceQuoteSummaryService>();
+builder.Services.AddHttpClient<IFinancialDataService, YahooFinanceQuoteSummaryService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        // Cookies must be enabled so the Yahoo session cookie received from fc.yahoo.com
+        // is automatically sent on the subsequent crumb-fetch request.
+        UseCookies = true,
+        AllowAutoRedirect = true,
+    });
 
 // Register other services
 builder.Services.AddSingleton<IFinancePromptEnricher, FinancePromptEnricher>();

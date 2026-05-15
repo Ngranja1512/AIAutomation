@@ -125,6 +125,15 @@ public class FinancialDataSettings
     public int MaxHoldingsForEnrichment { get; set; } = 3;
 
     public string QuoteSummaryUrl { get; set; } = "https://query1.finance.yahoo.com/v10/finance/quoteSummary/";
+
+    /// <summary>Seed URL hit first to get a session cookie before requesting the crumb.</summary>
+    public string CrumbSeedUrl { get; set; } = "https://fc.yahoo.com/";
+
+    /// <summary>Endpoint that returns the plain-text crumb token (requires the session cookie).</summary>
+    public string CrumbUrl { get; set; } = "https://query1.finance.yahoo.com/v1/test/getcrumb";
+
+    /// <summary>Fallback endpoint — more permissive, provides market cap and valuation ratios.</summary>
+    public string QuoteV7Url { get; set; } = "https://query1.finance.yahoo.com/v7/finance/quote";
 }
 
 public record AnnualFinancials(int Year, decimal? Revenue, decimal? NetIncome);
