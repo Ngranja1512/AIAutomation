@@ -11,7 +11,10 @@ builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("CopilotDigest"));
 
 // Register HTTP clients
-builder.Services.AddHttpClient<ICopilotService, CopilotService>();
+builder.Services.AddHttpClient<ICopilotService, CopilotService>(client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
 builder.Services.AddHttpClient<IFreeMarketDataService, FreeMarketDataService>();
 builder.Services.AddHttpClient<IMarketNewsService, YahooFinanceNewsService>();
 
