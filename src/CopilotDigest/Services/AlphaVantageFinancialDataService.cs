@@ -276,36 +276,75 @@ public sealed class AlphaVantageFinancialDataService : IFinancialDataService
     }
 
     /// <summary>
-    /// Parses free cash flow and total cash from the CASH_FLOW endpoint.
-    /// FCF = operatingCashflow − capitalExpenditures when the direct freeCashFlow field is absent.
+    /// Computes trailing-twelve-month (TTM) free cash flow from the last 4 quarterly reports.
+    /// This gives the most recent data available (e.g. Q2-2025 through Q1-2026 for a March quarter-end).
+    /// Falls back to the most recent annual report if quarterly data is insufficient.
+    /// FCF per quarter = operatingCashflow − |capitalExpenditures| (when freeCashFlow is "None").
     /// </summary>
     private static (decimal? freeCashflow, decimal? totalCash) ParseCashFlow(JsonDocument? doc)
     {
-        if (doc is null ||
-            !doc.RootElement.TryGetProperty("annualReports", out var reports) ||
-            reports.ValueKind != JsonValueKind.Array ||
-            reports.GetArrayLength() == 0)
+        if (doc is null)
         {
             return (null, null);
         }
 
-        // Use most recent annual report (index 0).
-        var latest = reports[0];
+        var root = doc.RootElement;
 
-        var fcf = ParseAvDecimal(latest, "freeCashFlow");
-        if (fcf is null)
+        // Prefer TTM from last 4 quarters — more recent than the annual figure.
+        if (root.TryGetProperty("quarterlyReports", out var quarters) &&
+            quarters.ValueKind == JsonValueKind.Array &&
+            quarters.GetArrayLength() >= 4)
         {
-            var ocf  = ParseAvDecimal(latest, "operatingCashflow");
-            var capex = ParseAvDecimal(latest, "capitalExpenditures");
-            if (ocf.HasValue && capex.HasValue)
+            decimal ttmFcf = 0;
+            bool anyValid  = false;
+
+            foreach (var q in quarters.EnumerateArray().Take(4))
             {
-                // AV stores capex as a positive number; FCF = OCF − capex.
-                fcf = ocf.Value - Math.Abs(capex.Value);
+                var fcfQ = ParseAvDecimal(q, "freeCashFlow");
+                if (fcfQ is null)
+                {
+                    var ocf   = ParseAvDecimal(q, "operatingCashflow");
+                    var capex = ParseAvDecimal(q, "capitalExpenditures");
+                    if (ocf.HasValue && capex.HasValue)
+                    {
+                        fcfQ = ocf.Value - Math.Abs(capex.Value);
+                    }
+                }
+
+                if (fcfQ.HasValue)
+                {
+                    ttmFcf  += fcfQ.Value;
+                    anyValid = true;
+                }
+            }
+
+            if (anyValid)
+            {
+                return (ttmFcf, null);
             }
         }
 
-        // AV CASH_FLOW doesn't have a total-cash field; leave null (OVERVIEW has no cash either).
-        return (fcf, null);
+        // Fallback: most recent annual report.
+        if (root.TryGetProperty("annualReports", out var annuals) &&
+            annuals.ValueKind == JsonValueKind.Array &&
+            annuals.GetArrayLength() > 0)
+        {
+            var latest = annuals[0];
+            var fcf    = ParseAvDecimal(latest, "freeCashFlow");
+            if (fcf is null)
+            {
+                var ocf   = ParseAvDecimal(latest, "operatingCashflow");
+                var capex = ParseAvDecimal(latest, "capitalExpenditures");
+                if (ocf.HasValue && capex.HasValue)
+                {
+                    fcf = ocf.Value - Math.Abs(capex.Value);
+                }
+            }
+
+            return (fcf, null);
+        }
+
+        return (null, null);
     }
 
     /// <summary>

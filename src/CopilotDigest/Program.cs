@@ -6,6 +6,10 @@ var runOnce = args.Contains("--run-once");
 
 var builder = Host.CreateApplicationBuilder(args);
 
+// Load local overrides (gitignored — never committed). Place secrets here for local dev.
+// In CI/CD, secrets are injected via environment variables instead.
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
+
 // Bind configuration
 builder.Services.Configure<AppSettings>(
     builder.Configuration.GetSection("CopilotDigest"));
